@@ -33,6 +33,13 @@ pub fn scan_tokens(source: &str) -> Result<Vec<Token>, LexerError> {
             ')' => Ok(Token::RightParen),
             '{' => Ok(Token::LeftBrace),
             '}' => Ok(Token::RightBrace),
+            ',' => Ok(Token::Comma),
+            '.' => Ok(Token::Dot),
+            '-' => Ok(Token::Minus),
+            '+' => Ok(Token::Plus),
+            ';' => Ok(Token::Semicolon),
+            '*' => Ok(Token::Star),
+
             _ => Err(LexerError::UnexpectedChar(char, 1)),
         })
         .collect::<Result<Vec<Token>, LexerError>>()

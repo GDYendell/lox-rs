@@ -9,9 +9,9 @@ pub enum Token {
     Minus,
     Plus,
     Semicolon,
-    Slash,
     Star,
 
+    Slash,
     Bang,
     BangEqual,
     Equal,
