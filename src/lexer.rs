@@ -28,6 +28,7 @@ impl From<LexerError> for String {
 pub fn scan_tokens(source: &str) -> Vec<Result<Token, LexerError>> {
     let mut source_iter = source.chars().peekable();
 
+    let mut line_number = 1;
     let mut tokens = Vec::<Result<Token, LexerError>>::new();
     while let Some(char) = source_iter.next() {
         match char {
@@ -85,7 +86,13 @@ pub fn scan_tokens(source: &str) -> Vec<Result<Token, LexerError>> {
                 _ => tokens.push(Ok(Token::Slash)),
             },
 
-            _ => tokens.push(Err(LexerError::UnexpectedChar(char, 1))),
+            ' ' | '\t' | '\r' => (),
+
+            '\n' => {
+                line_number = line_number + 1;
+            }
+
+            _ => tokens.push(Err(LexerError::UnexpectedChar(char, line_number))),
         }
     }
 
