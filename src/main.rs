@@ -22,9 +22,9 @@ fn main() -> Result<(), String> {
 
     println!("Tokens:");
 
-    let tokens = scan_tokens(&file_contents)?;
+    let tokens = scan_tokens(&file_contents);
     for token in tokens {
-        println!(" {:?}", token);
+        println!(" {:?}", token?);
     }
 
     Ok(())
