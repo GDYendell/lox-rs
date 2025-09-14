@@ -1,0 +1,27 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Run",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=lox-rs",
+                    "--package=lox-rs",
+                ],
+                // "filter": {
+                //     "name": "codecrafters-interpreter",
+                //     "kind": "bin"
+                // }
+            },
+            "args": [
+                // "lex",
+                "${file}"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "internalConsole"
+        }
+    ]
+}
