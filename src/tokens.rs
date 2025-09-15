@@ -23,7 +23,7 @@ pub enum Token {
 
     Identifier,
     String(String),
-    Number,
+    Number(f64),
 
     And,
     Class,
