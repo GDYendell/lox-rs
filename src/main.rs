@@ -1,7 +1,7 @@
 use clap::Parser;
 
 mod lexer;
-use lexer::scan_tokens;
+use lexer::Lexer;
 
 mod tokens;
 
@@ -22,7 +22,7 @@ fn main() -> Result<(), String> {
 
     println!("Tokens:");
 
-    let tokens = scan_tokens(&file_contents);
+    let tokens = Lexer::new(file_contents).scan_tokens();
     for token in tokens {
         println!(" {:?}", token?);
     }

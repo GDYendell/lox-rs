@@ -22,7 +22,7 @@ pub enum Token {
     LessEqual,
 
     Identifier,
-    String,
+    String(String),
     Number,
 
     And,
