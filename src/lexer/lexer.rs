@@ -1,6 +1,6 @@
 use crate::tokens::Token;
 
-use std::fmt;
+use super::error::LexerError;
 
 macro_rules! scan_operator {
     ($self:ident, $char:literal, $token1:ident, $token2:ident) => {
@@ -147,36 +147,5 @@ impl Lexer {
             Err(LexerError::InvalidNumber(number, self.line_count)),
             |number| Ok(Token::Number(number)),
         )
-    }
-}
-
-#[derive(Debug, PartialEq, Eq)]
-pub enum LexerError {
-    UnexpectedChar(char, usize),
-    UnterminatedString(String, usize),
-    InvalidNumber(String, usize),
-}
-
-impl fmt::Display for LexerError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            LexerError::UnexpectedChar(char, line) => {
-                write!(f, "Line {}: Unexpected character: '{}'", line, char)
-            }
-            LexerError::UnterminatedString(string, line) => {
-                write!(f, "Line {}: Unterminated string: '{}'", line, string)
-            }
-            LexerError::InvalidNumber(number, line) => {
-                write!(f, "Line {}: Invalid number: '{}'", line, number)
-            }
-        }
-    }
-}
-
-impl std::error::Error for LexerError {}
-
-impl From<LexerError> for String {
-    fn from(e: LexerError) -> Self {
-        e.to_string()
     }
 }
