@@ -83,6 +83,8 @@ impl Lexer {
 
                 char if char.is_digit(10) => tokens.push(self.scan_number()),
 
+                char if char.is_alphabetic() || char == '_' => tokens.push(self.scan_word()),
+
                 _ => tokens.push(Err(LexerError::UnexpectedChar(char, self.line_count))),
             }
         }
@@ -147,5 +149,35 @@ impl Lexer {
             Err(LexerError::InvalidNumber(number, self.line_count)),
             |number| Ok(Token::Number(number)),
         )
+    }
+
+    fn scan_word(&mut self) -> Result<Token, LexerError> {
+        let start = self.position - 1;
+        while let Some(char) = self.peek()
+            && (char.is_alphanumeric() || char == '_')
+        {
+            self.next();
+        }
+
+        let word = self.source[start..self.position].iter().collect::<String>();
+        match word.as_str() {
+            "and" => Ok(Token::And),
+            "class" => Ok(Token::Class),
+            "else" => Ok(Token::Else),
+            "false" => Ok(Token::False),
+            "for" => Ok(Token::For),
+            "fun" => Ok(Token::Fun),
+            "if" => Ok(Token::If),
+            "nil" => Ok(Token::Nil),
+            "or" => Ok(Token::Or),
+            "print" => Ok(Token::Print),
+            "return" => Ok(Token::Return),
+            "super" => Ok(Token::Super),
+            "this" => Ok(Token::This),
+            "true" => Ok(Token::True),
+            "var" => Ok(Token::Var),
+            "while" => Ok(Token::While),
+            _ => Ok(Token::Identifier(word)),
+        }
     }
 }
