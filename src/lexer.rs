@@ -2,6 +2,17 @@ use crate::tokens::Token;
 
 use std::fmt;
 
+macro_rules! scan_operator {
+    ($self:ident, $char:literal, $token1:ident, $token2:ident) => {
+        if let Some($char) = $self.peek() {
+            $self.next();
+            Ok(Token::$token1)
+        } else {
+            Ok(Token::$token2)
+        }
+    };
+}
+
 pub struct Lexer {
     source: Vec<char>,
 
@@ -52,37 +63,10 @@ impl Lexer {
                 ';' => tokens.push(Ok(Token::Semicolon)),
                 '*' => tokens.push(Ok(Token::Star)),
 
-                '!' => match self.peek() {
-                    Some('=') => {
-                        self.next();
-                        tokens.push(Ok(Token::BangEqual))
-                    }
-                    _ => tokens.push(Ok(Token::Bang)),
-                },
-
-                '=' => match self.peek() {
-                    Some('=') => {
-                        self.next();
-                        tokens.push(Ok(Token::EqualEqual))
-                    }
-                    _ => tokens.push(Ok(Token::Equal)),
-                },
-
-                '<' => match self.peek() {
-                    Some('=') => {
-                        self.next();
-                        tokens.push(Ok(Token::LessEqual))
-                    }
-                    _ => tokens.push(Ok(Token::Less)),
-                },
-
-                '>' => match self.peek() {
-                    Some('=') => {
-                        self.next();
-                        tokens.push(Ok(Token::GreaterEqual))
-                    }
-                    _ => tokens.push(Ok(Token::Greater)),
-                },
+                '!' => tokens.push(scan_operator!(self, '=', BangEqual, Bang)),
+                '=' => tokens.push(scan_operator!(self, '=', EqualEqual, Equal)),
+                '<' => tokens.push(scan_operator!(self, '=', LessEqual, Less)),
+                '>' => tokens.push(scan_operator!(self, '=', GreaterEqual, Greater)),
 
                 '/' => match self.peek() {
                     Some('/') => self.scan_comment(),
