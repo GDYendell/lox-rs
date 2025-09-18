@@ -183,3 +183,48 @@ impl Lexer {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_number() {
+        let mut lexer = Lexer::new("1".to_string());
+        assert_eq!(
+            lexer.scan_tokens(),
+            vec![Ok(Token::Number(1.0)), Ok(Token::EOF)]
+        );
+    }
+
+    #[test]
+    fn test_string() {
+        let mut lexer = Lexer::new("\"this is a string\"".to_string());
+        assert_eq!(
+            lexer.scan_tokens(),
+            vec![
+                Ok(Token::String("this is a string".to_string())),
+                Ok(Token::EOF)
+            ]
+        );
+    }
+
+    #[test]
+    fn test_expression() {
+        let mut lexer = Lexer::new("var _true = (true or false)".to_string());
+        assert_eq!(
+            lexer.scan_tokens(),
+            vec![
+                Ok(Token::Var),
+                Ok(Token::Identifier("_true".to_string())),
+                Ok(Token::Equal),
+                Ok(Token::LeftParen),
+                Ok(Token::True),
+                Ok(Token::Or),
+                Ok(Token::False),
+                Ok(Token::RightParen),
+                Ok(Token::EOF)
+            ]
+        );
+    }
+}
