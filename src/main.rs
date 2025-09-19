@@ -3,7 +3,7 @@ use clap::Parser;
 mod lexer;
 use lexer::Lexer;
 
-mod tokens;
+mod token;
 
 #[derive(clap::Parser)]
 struct Cli {

@@ -1,4 +1,4 @@
-use crate::tokens::Token;
+use crate::token::Token;
 
 use super::error::LexerError;
 
