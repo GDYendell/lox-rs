@@ -1,6 +1,29 @@
-#[derive(Debug)]
-#[derive(PartialEq)]
-pub enum Token {
+#[derive(Debug, PartialEq)]
+pub struct Token {
+    kind: TokenKind,
+    value: Option<TokenValue>,
+}
+
+impl From<TokenKind> for Token {
+    fn from(kind: TokenKind) -> Token {
+        Token { kind, value: None }
+    }
+}
+
+impl From<(TokenKind, String)> for Token {
+    fn from((kind, value): (TokenKind, String)) -> Token {
+        Token { kind, value: Some(TokenValue::String(value)) }
+    }
+}
+
+impl From<(TokenKind, f64)> for Token {
+    fn from((kind, value): (TokenKind, f64)) -> Token {
+        Token { kind, value: Some(TokenValue::Number(value)) }
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub enum TokenKind {
     LeftParen,
     RightParen,
     LeftBrace,
@@ -22,9 +45,9 @@ pub enum Token {
     Less,
     LessEqual,
 
-    Identifier(String),
-    String(String),
-    Number(f64),
+    Identifier,
+    String,
+    Number,
 
     And,
     Class,
@@ -44,4 +67,10 @@ pub enum Token {
     While,
 
     EOF,
+}
+
+#[derive(Debug, PartialEq)]
+pub enum TokenValue {
+    String(String),
+    Number(f64),
 }

@@ -1,14 +1,14 @@
-use crate::token::Token;
-
 use super::error::LexerError;
+use crate::token::Token;
+use crate::token::TokenKind;
 
 macro_rules! scan_operator {
     ($self:ident, $char:literal, $token1:ident, $token2:ident) => {
         if let Some($char) = $self.peek() {
             $self.next();
-            Ok(Token::$token1)
+            Ok(Token::from(TokenKind::$token1))
         } else {
-            Ok(Token::$token2)
+            Ok(Token::from(TokenKind::$token2))
         }
     };
 }
@@ -52,16 +52,16 @@ impl Lexer {
 
         while let Some(char) = self.next() {
             match char {
-                '(' => tokens.push(Ok(Token::LeftParen)),
-                ')' => tokens.push(Ok(Token::RightParen)),
-                '{' => tokens.push(Ok(Token::LeftBrace)),
-                '}' => tokens.push(Ok(Token::RightBrace)),
-                ',' => tokens.push(Ok(Token::Comma)),
-                '.' => tokens.push(Ok(Token::Dot)),
-                '-' => tokens.push(Ok(Token::Minus)),
-                '+' => tokens.push(Ok(Token::Plus)),
-                ';' => tokens.push(Ok(Token::Semicolon)),
-                '*' => tokens.push(Ok(Token::Star)),
+                '(' => tokens.push(Ok(Token::from(TokenKind::LeftParen))),
+                ')' => tokens.push(Ok(Token::from(TokenKind::RightParen))),
+                '{' => tokens.push(Ok(Token::from(TokenKind::LeftBrace))),
+                '}' => tokens.push(Ok(Token::from(TokenKind::RightBrace))),
+                ',' => tokens.push(Ok(Token::from(TokenKind::Comma))),
+                '.' => tokens.push(Ok(Token::from(TokenKind::Dot))),
+                '-' => tokens.push(Ok(Token::from(TokenKind::Minus))),
+                '+' => tokens.push(Ok(Token::from(TokenKind::Plus))),
+                ';' => tokens.push(Ok(Token::from(TokenKind::Semicolon))),
+                '*' => tokens.push(Ok(Token::from(TokenKind::Star))),
 
                 '!' => tokens.push(scan_operator!(self, '=', BangEqual, Bang)),
                 '=' => tokens.push(scan_operator!(self, '=', EqualEqual, Equal)),
@@ -70,7 +70,7 @@ impl Lexer {
 
                 '/' => match self.peek() {
                     Some('/') => self.scan_comment(),
-                    _ => tokens.push(Ok(Token::Slash)),
+                    _ => tokens.push(Ok(Token::from(TokenKind::Slash))),
                 },
 
                 ' ' | '\t' | '\r' => {}
@@ -89,7 +89,7 @@ impl Lexer {
             }
         }
 
-        tokens.push(Ok(Token::EOF));
+        tokens.push(Ok(Token::from(TokenKind::EOF)));
 
         tokens
     }
@@ -121,9 +121,12 @@ impl Lexer {
         }
 
         self.next();
-        Ok(Token::String(
-            self.source[start..self.position - 1].iter().collect(),
-        ))
+        Ok(Token::from((
+            TokenKind::String,
+            self.source[start..self.position - 1]
+                .iter()
+                .collect::<String>(),
+        )))
     }
 
     fn scan_number(&mut self) -> Result<Token, LexerError> {
@@ -149,7 +152,7 @@ impl Lexer {
         let number = self.source[start..self.position].iter().collect::<String>();
         number.parse().map_or(
             Err(LexerError::InvalidNumber(number, self.line_count)),
-            |number| Ok(Token::Number(number)),
+            |number: f64| Ok(Token::from((TokenKind::Number, number))),
         )
     }
 
@@ -163,23 +166,23 @@ impl Lexer {
 
         let word = self.source[start..self.position].iter().collect::<String>();
         match word.as_str() {
-            "and" => Ok(Token::And),
-            "class" => Ok(Token::Class),
-            "else" => Ok(Token::Else),
-            "false" => Ok(Token::False),
-            "for" => Ok(Token::For),
-            "fun" => Ok(Token::Fun),
-            "if" => Ok(Token::If),
-            "nil" => Ok(Token::Nil),
-            "or" => Ok(Token::Or),
-            "print" => Ok(Token::Print),
-            "return" => Ok(Token::Return),
-            "super" => Ok(Token::Super),
-            "this" => Ok(Token::This),
-            "true" => Ok(Token::True),
-            "var" => Ok(Token::Var),
-            "while" => Ok(Token::While),
-            _ => Ok(Token::Identifier(word)),
+            "and" => Ok(Token::from(TokenKind::And)),
+            "class" => Ok(Token::from(TokenKind::Class)),
+            "else" => Ok(Token::from(TokenKind::Else)),
+            "false" => Ok(Token::from(TokenKind::False)),
+            "for" => Ok(Token::from(TokenKind::For)),
+            "fun" => Ok(Token::from(TokenKind::Fun)),
+            "if" => Ok(Token::from(TokenKind::If)),
+            "nil" => Ok(Token::from(TokenKind::Nil)),
+            "or" => Ok(Token::from(TokenKind::Or)),
+            "print" => Ok(Token::from(TokenKind::Print)),
+            "return" => Ok(Token::from(TokenKind::Return)),
+            "super" => Ok(Token::from(TokenKind::Super)),
+            "this" => Ok(Token::from(TokenKind::This)),
+            "true" => Ok(Token::from(TokenKind::True)),
+            "var" => Ok(Token::from(TokenKind::Var)),
+            "while" => Ok(Token::from(TokenKind::While)),
+            _ => Ok(Token::from((TokenKind::Identifier, word))),
         }
     }
 }
@@ -193,7 +196,10 @@ mod tests {
         let mut lexer = Lexer::new("1".to_string());
         assert_eq!(
             lexer.scan_tokens(),
-            vec![Ok(Token::Number(1.0)), Ok(Token::EOF)]
+            vec![
+                Ok(Token::from((TokenKind::Number, 1.0))),
+                Ok(Token::from(TokenKind::EOF))
+            ]
         );
     }
 
@@ -203,8 +209,11 @@ mod tests {
         assert_eq!(
             lexer.scan_tokens(),
             vec![
-                Ok(Token::String("this is a string".to_string())),
-                Ok(Token::EOF)
+                Ok(Token::from((
+                    TokenKind::String,
+                    "this is a string".to_string()
+                ))),
+                Ok(Token::from(TokenKind::EOF))
             ]
         );
     }
@@ -215,15 +224,15 @@ mod tests {
         assert_eq!(
             lexer.scan_tokens(),
             vec![
-                Ok(Token::Var),
-                Ok(Token::Identifier("_true".to_string())),
-                Ok(Token::Equal),
-                Ok(Token::LeftParen),
-                Ok(Token::True),
-                Ok(Token::Or),
-                Ok(Token::False),
-                Ok(Token::RightParen),
-                Ok(Token::EOF)
+                Ok(Token::from(TokenKind::Var)),
+                Ok(Token::from((TokenKind::Identifier, "_true".to_string()))),
+                Ok(Token::from(TokenKind::Equal)),
+                Ok(Token::from(TokenKind::LeftParen)),
+                Ok(Token::from(TokenKind::True)),
+                Ok(Token::from(TokenKind::Or)),
+                Ok(Token::from(TokenKind::False)),
+                Ok(Token::from(TokenKind::RightParen)),
+                Ok(Token::from(TokenKind::EOF))
             ]
         );
     }
