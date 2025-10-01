@@ -3,28 +3,67 @@ use clap::Parser;
 mod lexer;
 use lexer::Lexer;
 
+use crate::{ast_display::AstDisplay, expression::{Binary, Expr, Grouping, Unary}};
+
+mod ast_display;
+mod expression;
 mod token;
 
 #[derive(clap::Parser)]
-struct Cli {
-    file: String,
+struct Args {
+
+    #[command(subcommand)]
+    cmd: Commands,
+}
+
+#[derive(clap::Subcommand)]
+enum Commands {
+    Lex {
+        file: String,
+    },
+    PrintAst,
 }
 
 fn main() -> Result<(), String> {
-    let args = Cli::parse();
+    let args = Args::parse();
 
-    println!("Lexing '{}'", args.file);
+    if let Commands::Lex { file } = args.cmd {
+        println!("Lexing '{}'", file);
 
-    let Ok(file_contents) = std::fs::read_to_string(&args.file) else {
-        println!("Failed to read file {}", args.file);
-        return Err("Failed to read file".to_string());
-    };
+        let Ok(file_contents) = std::fs::read_to_string(&file) else {
+            println!("Failed to read file {}", file);
+            return Err("Failed to read file".to_string());
+        };
 
-    println!("Tokens:");
+        println!("Tokens:");
 
-    let tokens = Lexer::new(file_contents).scan_tokens();
-    for token in tokens {
-        println!(" {:?}", token?);
+        let tokens = Lexer::new(file_contents).scan_tokens();
+        for token in tokens {
+            println!(" {:?}", token?);
+        }
+    } else if let Commands::PrintAst = args.cmd {
+        let expression = Expr::BinaryExpr(Binary::new(
+            Expr::StringLiteralExpr("one".to_string()),
+            token::Token::from(token::TokenKind::Plus),
+            Expr::StringLiteralExpr("two".to_string()),
+        ));
+        println!("{}", expression.ast());
+
+        let expression = Expr::UnaryExpr(Unary::new(
+            token::Token::from(token::TokenKind::Minus),
+            Expr::NumberLiteralExpr(1.0),
+        ));
+        println!("{}", expression.ast());
+
+        let expression = Expr::BinaryExpr(Binary::new(
+            Expr::UnaryExpr(Unary::new(
+                token::Token::from(token::TokenKind::Minus),
+                Expr::NumberLiteralExpr(123.0),
+            )),
+            token::Token::from(token::TokenKind::Star),
+            Expr::GroupingExpr(Grouping::new(Expr::NumberLiteralExpr(45.67))),
+        ));
+        println!("{}", expression.ast());
     }
 
     Ok(())

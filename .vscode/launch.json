@@ -4,21 +4,34 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Run",
+            "name": "Lex",
             "cargo": {
                 "args": [
                     "build",
                     "--bin=lox-rs",
                     "--package=lox-rs",
                 ],
-                // "filter": {
-                //     "name": "codecrafters-interpreter",
-                //     "kind": "bin"
-                // }
             },
             "args": [
-                // "lex",
+                "lex",
                 "${file}"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "internalConsole"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Print AST",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=lox-rs",
+                    "--package=lox-rs",
+                ],
+            },
+            "args": [
+                "print-ast",
             ],
             "cwd": "${workspaceFolder}",
             "console": "internalConsole"
