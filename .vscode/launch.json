@@ -35,6 +35,24 @@
             ],
             "cwd": "${workspaceFolder}",
             "console": "internalConsole"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Parse",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=lox-rs",
+                    "--package=lox-rs",
+                ],
+            },
+            "args": [
+                "parse",
+                "${file}"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "internalConsole"
         }
     ]
 }
