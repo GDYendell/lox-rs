@@ -1,9 +1,17 @@
 use crate::token::Token;
 
+
+#[derive(Debug, PartialEq)]
+pub enum Literal {
+    Boolean(bool),
+    Number(f64),
+    String(String),
+    Nil,
+}
+
 #[derive(Debug, PartialEq)]
 pub enum Expr {
-    NumberLiteralExpr(f64),
-    StringLiteralExpr(String),
+    LiteralExpr(Literal),
     UnaryExpr(Unary),
     BinaryExpr(Binary),
     GroupingExpr(Grouping),

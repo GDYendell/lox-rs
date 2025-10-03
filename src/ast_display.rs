@@ -1,6 +1,6 @@
 use std::ops::Deref;
 
-use crate::expression::Expr;
+use crate::expression::{Expr, Literal};
 
 pub trait AstDisplay {
     fn ast(&self) -> String;
@@ -9,8 +9,10 @@ pub trait AstDisplay {
 impl AstDisplay for Expr {
     fn ast(&self) -> String {
         match self {
-            Expr::NumberLiteralExpr(value) => value.to_string(),
-            Expr::StringLiteralExpr(value) => format!("\"{}\"", value),
+            Expr::LiteralExpr(Literal::Boolean(value)) => value.to_string(),
+            Expr::LiteralExpr(Literal::Number(value)) => value.to_string(),
+            Expr::LiteralExpr(Literal::String(value)) => format!("\"{}\"", value),
+            Expr::LiteralExpr(Literal::Nil) => "nil".to_string(),
             Expr::UnaryExpr(unary) => format!("({} {})", unary.operator, unary.right.deref().ast()),
             Expr::BinaryExpr(binary) => {
                 format!(

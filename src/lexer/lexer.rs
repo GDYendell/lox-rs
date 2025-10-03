@@ -30,13 +30,13 @@ impl Lexer {
     }
 
     fn peek(&self) -> Option<char> {
-        self.source.get(self.position).copied()
+        self.source.get(self.position).cloned()
     }
 
     fn peek_two(&self, n: usize) -> Option<Vec<char>> {
         (self.position..self.position + n)
             .into_iter()
-            .map(|i| self.source.get(i).copied())
+            .map(|i| self.source.get(i).cloned())
             .collect()
     }
 

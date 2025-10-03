@@ -1,9 +1,9 @@
 use std::fmt::Display;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Token {
-    kind: TokenKind,
-    value: Option<TokenValue>,
+    pub kind: TokenKind,
+    pub value: Option<TokenValue>,
 }
 
 impl From<TokenKind> for Token {
@@ -35,7 +35,7 @@ impl Display for Token {
 
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum TokenKind {
     LeftParen,
     RightParen,
@@ -136,7 +136,7 @@ impl Display for TokenKind {
 }
 
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum TokenValue {
     String(String),
     Number(f64),
