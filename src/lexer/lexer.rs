@@ -191,17 +191,45 @@ impl Lexer {
 mod tests {
     use super::*;
 
+    // Test different numbers
     #[test]
-    fn test_number() {
-        let mut lexer = Lexer::new("1".to_string());
+    fn test_int() {
+        let mut lexer = Lexer::new("123".to_string());
         assert_eq!(
             lexer.scan_tokens(),
             vec![
-                Ok(Token::from((TokenKind::Number, 1.0))),
+                Ok(Token::from((TokenKind::Number, 123.0))),
                 Ok(Token::from(TokenKind::EOF))
             ]
         );
     }
+
+    #[test]
+    fn test_float() {
+        let mut lexer = Lexer::new("123.456".to_string());
+        assert_eq!(
+            lexer.scan_tokens(),
+            vec![
+                Ok(Token::from((TokenKind::Number, 123.456))),
+                Ok(Token::from(TokenKind::EOF))
+            ]
+        );
+    }
+
+    #[test]
+    fn test_trailing_dot() {
+        let mut lexer = Lexer::new("123.abc".to_string());
+        assert_eq!(
+            lexer.scan_tokens(),
+            vec![
+                Ok(Token::from((TokenKind::Number, 123.0))),
+                Ok(Token::from(TokenKind::Dot)),
+                Ok(Token::from((TokenKind::Identifier, "abc".to_string()))),
+                Ok(Token::from(TokenKind::EOF))
+            ]
+        );
+    }
+
 
     #[test]
     fn test_string() {
