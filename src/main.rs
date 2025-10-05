@@ -1,5 +1,8 @@
 use clap::Parser;
 
+mod token;
+use token::{Token, TokenKind};
+
 mod lexer;
 use lexer::Lexer;
 
@@ -7,7 +10,6 @@ use crate::{ast_display::AstDisplay, expression::{Binary, Expr, Grouping, Litera
 
 mod ast_display;
 mod expression;
-mod token;
 
 #[derive(clap::Parser)]
 struct Args {
@@ -44,23 +46,23 @@ fn main() -> Result<(), String> {
     } else if let Commands::PrintAst = args.cmd {
         let expression = Expr::BinaryExpr(Binary::new(
             Expr::LiteralExpr(Literal::String("one".to_string())),
-            token::Token::from(token::TokenKind::Plus),
+            Token::from(TokenKind::Plus),
             Expr::LiteralExpr(Literal::String("two".to_string())),
         ));
         println!("{}", expression.ast());
 
         let expression = Expr::UnaryExpr(Unary::new(
-            token::Token::from(token::TokenKind::Minus),
+            Token::from(TokenKind::Minus),
             Expr::LiteralExpr(Literal::Number(1.0)),
         ));
         println!("{}", expression.ast());
 
         let expression = Expr::BinaryExpr(Binary::new(
             Expr::UnaryExpr(Unary::new(
-                token::Token::from(token::TokenKind::Minus),
+                Token::from(TokenKind::Minus),
                 Expr::LiteralExpr(Literal::Number(123.0)),
             )),
-            token::Token::from(token::TokenKind::Star),
+            Token::from(TokenKind::Star),
             Expr::GroupingExpr(Grouping::new(
                 Expr::LiteralExpr(Literal::Number(45.67)),
             )),
