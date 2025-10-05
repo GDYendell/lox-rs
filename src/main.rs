@@ -1,10 +1,13 @@
-use clap::Parser;
+use clap::Parser as ClapParser;
 
 mod token;
 use token::{Token, TokenKind};
 
 mod lexer;
 use lexer::Lexer;
+
+mod parser;
+use parser::Parser;
 
 use crate::{ast_display::AstDisplay, expression::{Binary, Expr, Grouping, Literal, Unary}};
 
@@ -21,6 +24,9 @@ struct Args {
 #[derive(clap::Subcommand)]
 enum Commands {
     Lex {
+        file: String,
+    },
+    Parse {
         file: String,
     },
     PrintAst,
@@ -43,6 +49,24 @@ fn main() -> Result<(), String> {
         for token in tokens {
             println!(" {:?}", token?);
         }
+    } else if let Commands::Parse { file } = args.cmd {
+        println!("Parsing '{}'", file);
+
+        let Ok(file_contents) = std::fs::read_to_string(&file) else {
+            println!("Failed to read file {}", file);
+            return Err("Failed to read file".to_string());
+        };
+
+        println!("AST:");
+        let tokens = Lexer::new(file_contents).scan_tokens();
+        let errors = tokens.iter().filter_map(|token| token.as_ref().err()).collect::<Vec<_>>();
+        dbg!(&errors);
+        let tokens: Vec<token::Token> = tokens.into_iter().filter_map(|token| token.ok()).collect();
+        dbg!(&tokens);
+        let mut parser = Parser::new(tokens);
+        let expression = parser.parse();
+        println!("{}", expression.ast());
+
     } else if let Commands::PrintAst = args.cmd {
         let expression = Expr::BinaryExpr(Binary::new(
             Expr::LiteralExpr(Literal::String("one".to_string())),
