@@ -1,5 +1,12 @@
 use crate::token::Token;
 
+#[derive(Debug, PartialEq)]
+pub enum Expr {
+    LiteralExpr(Literal),
+    UnaryExpr(Unary),
+    BinaryExpr(Binary),
+    GroupingExpr(Grouping),
+}
 
 #[derive(Debug, PartialEq)]
 pub enum Literal {
@@ -7,14 +14,6 @@ pub enum Literal {
     Number(f64),
     String(String),
     Nil,
-}
-
-#[derive(Debug, PartialEq)]
-pub enum Expr {
-    LiteralExpr(Literal),
-    UnaryExpr(Unary),
-    BinaryExpr(Binary),
-    GroupingExpr(Grouping),
 }
 
 #[derive(Debug, PartialEq)]
@@ -60,5 +59,4 @@ impl Grouping {
             expression: Box::new(expression),
         }
     }
-
 }
