@@ -36,7 +36,13 @@ impl Parser {
     }
 
     pub fn parse(&mut self) -> Result<Expr, ParserError> {
-        self.expression()
+        match self.expression() {
+            Ok(expr) => Ok(expr),
+            Err(err) => {
+                self.synchronise();
+                Err(err)
+            }
+        }
     }
 
     fn expression(&mut self) -> Result<Expr, ParserError> {
@@ -143,6 +149,32 @@ impl Parser {
         }
 
         Ok(Expr::GroupingExpr(Grouping::new(expr)))
+    }
+
+    fn synchronise(&mut self) {
+        while let Some(Token {
+            kind: token_kind,
+            value: _,
+        }) = self.peek()
+        {
+            match token_kind {
+                TokenKind::Semicolon => {
+                    self.next();
+                    return;
+                }
+                TokenKind::Class
+                | TokenKind::Fun
+                | TokenKind::Var
+                | TokenKind::For
+                | TokenKind::If
+                | TokenKind::While
+                | TokenKind::Print
+                | TokenKind::Return => return,
+                _ => {
+                    self.next();
+                },
+            }
+        }
     }
 }
 
