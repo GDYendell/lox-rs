@@ -1,3 +1,5 @@
+use super::error::ParserError;
+
 use crate::{
     expression::{Binary, Expr, Grouping, Literal, Unary},
     token::{Token, TokenKind, TokenValue},
@@ -33,26 +35,26 @@ impl Parser {
         None
     }
 
-    pub fn parse(&mut self) -> Expr {
+    pub fn parse(&mut self) -> Result<Expr, ParserError> {
         self.expression()
     }
 
-    fn expression(&mut self) -> Expr {
+    fn expression(&mut self) -> Result<Expr, ParserError> {
         self.equality()
     }
 
-    fn equality(&mut self) -> Expr {
-        let mut expr = self.comparison();
+    fn equality(&mut self) -> Result<Expr, ParserError> {
+        let mut expr = self.comparison()?;
 
         while let Some(operator) = self.match_next(&[TokenKind::BangEqual, TokenKind::EqualEqual]) {
-            expr = Expr::BinaryExpr(Binary::new(expr, operator, self.comparison()));
+            expr = Expr::BinaryExpr(Binary::new(expr, operator, self.comparison()?));
         }
 
-        expr
+        Ok(expr)
     }
 
-    fn comparison(&mut self) -> Expr {
-        let mut expr = self.term();
+    fn comparison(&mut self) -> Result<Expr, ParserError> {
+        let mut expr = self.term()?;
 
         while let Some(operator) = self.match_next(&[
             TokenKind::Greater,
@@ -60,66 +62,76 @@ impl Parser {
             TokenKind::Less,
             TokenKind::LessEqual,
         ]) {
-            expr = Expr::BinaryExpr(Binary::new(expr, operator, self.term()));
+            expr = Expr::BinaryExpr(Binary::new(expr, operator, self.term()?));
         }
 
-        expr
+        Ok(expr)
     }
 
-    fn term(&mut self) -> Expr {
-        let mut expr = self.factor();
+    fn term(&mut self) -> Result<Expr, ParserError> {
+        let mut expr = self.factor()?;
 
         while let Some(operator) = self.match_next(&[TokenKind::Minus, TokenKind::Plus]) {
-            expr = Expr::BinaryExpr(Binary::new(expr, operator, self.factor()));
+            expr = Expr::BinaryExpr(Binary::new(expr, operator, self.factor()?));
         }
 
-        expr
+        Ok(expr)
     }
 
-    fn factor(&mut self) -> Expr {
-        let mut expr = self.unary();
+    fn factor(&mut self) -> Result<Expr, ParserError> {
+        let mut expr = self.unary()?;
 
         while let Some(operator) = self.match_next(&[TokenKind::Slash, TokenKind::Star]) {
-            expr = Expr::BinaryExpr(Binary::new(expr, operator, self.unary()));
+            expr = Expr::BinaryExpr(Binary::new(expr, operator, self.unary()?));
         }
 
-        expr
+        Ok(expr)
     }
 
-    fn unary(&mut self) -> Expr {
+    fn unary(&mut self) -> Result<Expr, ParserError> {
         if let Some(operator) = self.match_next(&[TokenKind::Bang, TokenKind::Minus]) {
-            return Expr::UnaryExpr(Unary::new(operator, self.unary()));
+            return Ok(Expr::UnaryExpr(Unary::new(operator, self.unary()?)));
         }
 
         self.primary()
     }
 
-    fn primary(&mut self) -> Expr {
+    fn primary(&mut self) -> Result<Expr, ParserError> {
         if let Some(Token { kind, value }) = self.next() {
             match kind {
-                TokenKind::False => Expr::LiteralExpr(Literal::Boolean(false)),
-                TokenKind::True => Expr::LiteralExpr(Literal::Boolean(true)),
-                TokenKind::Nil => Expr::LiteralExpr(Literal::Nil),
+                TokenKind::False => Ok(Expr::LiteralExpr(Literal::Boolean(false))),
+                TokenKind::True => Ok(Expr::LiteralExpr(Literal::Boolean(true))),
+                TokenKind::Nil => Ok(Expr::LiteralExpr(Literal::Nil)),
                 TokenKind::Number | TokenKind::String => {
                     if let Some(value) = value {
                         match value {
-                            TokenValue::String(value) => Expr::LiteralExpr(Literal::String(value)),
-                            TokenValue::Number(value) => Expr::LiteralExpr(Literal::Number(value)),
+                            TokenValue::String(value) => {
+                                Ok(Expr::LiteralExpr(Literal::String(value)))
+                            }
+                            TokenValue::Number(value) => {
+                                Ok(Expr::LiteralExpr(Literal::Number(value)))
+                            }
                         }
                     } else {
-                        todo!("String/Number Token without value")
+                        Err(ParserError::ExpectedPrimaryExpressionGot(Token {
+                            kind,
+                            value,
+                        }))
                     }
                 }
                 TokenKind::LeftParen => self.parenthesis(),
-                _ => todo!("Token is not a primary expression"),
+                _ => Err(ParserError::ExpectedPrimaryExpressionGot(Token {
+                    kind,
+                    value,
+                })),
             }
         } else {
-            todo!("No tokens left")
+            Err(ParserError::ExpectedExpression)
         }
     }
 
-    fn parenthesis(&mut self) -> Expr {
-        let expr = self.expression();
+    fn parenthesis(&mut self) -> Result<Expr, ParserError> {
+        let expr = self.expression()?;
 
         if self.next()
             != Some(Token {
@@ -127,10 +139,10 @@ impl Parser {
                 value: None,
             })
         {
-            todo!("Parenthesis expression is not closed")
+            return Err(ParserError::UnclosedParenthesis);
         }
 
-        Expr::GroupingExpr(Grouping::new(expr))
+        Ok(Expr::GroupingExpr(Grouping::new(expr)))
     }
 }
 
@@ -138,12 +150,12 @@ impl Parser {
 mod tests {
     use crate::{
         expression::{Binary, Expr, Grouping, Literal, Unary},
-        parser::Parser,
-        token::{Token, TokenKind, TokenValue},
+        parser::{Parser, error::ParserError},
+        token::{Token, TokenKind},
     };
 
     #[test]
-    fn test_equality() {
+    fn test_equality() -> Result<(), ParserError> {
         let tokens: Vec<Token> = vec![
             Token::from((TokenKind::Number, 1.0)),
             Token::from(TokenKind::EqualEqual),
@@ -152,17 +164,18 @@ mod tests {
         let mut parser = Parser::new(tokens);
         let expression = parser.parse();
         assert_eq!(
-            expression,
+            expression?,
             crate::Expr::BinaryExpr(Binary::new(
                 Expr::LiteralExpr(Literal::Number(1.0)),
                 Token::from(TokenKind::EqualEqual),
                 Expr::LiteralExpr(Literal::Number(1.0))
             ))
         );
+        Ok(())
     }
 
     #[test]
-    fn test_comparison() {
+    fn test_comparison() -> Result<(), ParserError> {
         let tokens: Vec<Token> = vec![
             Token::from((TokenKind::Number, 1.0)),
             Token::from(TokenKind::Greater),
@@ -171,17 +184,18 @@ mod tests {
         let mut parser = Parser::new(tokens);
         let expression = parser.parse();
         assert_eq!(
-            expression,
+            expression?,
             crate::Expr::BinaryExpr(Binary::new(
                 Expr::LiteralExpr(Literal::Number(1.0)),
                 Token::from(TokenKind::Greater),
                 Expr::LiteralExpr(Literal::Number(2.0))
             ))
         );
+        Ok(())
     }
 
     #[test]
-    fn test_term() {
+    fn test_term() -> Result<(), ParserError> {
         let tokens: Vec<Token> = vec![
             Token::from((TokenKind::Number, 1.0)),
             Token::from(TokenKind::Plus),
@@ -190,17 +204,18 @@ mod tests {
         let mut parser = Parser::new(tokens);
         let expression = parser.parse();
         assert_eq!(
-            expression,
+            expression?,
             crate::Expr::BinaryExpr(Binary::new(
                 Expr::LiteralExpr(Literal::Number(1.0)),
                 Token::from(TokenKind::Plus),
                 Expr::LiteralExpr(Literal::Number(2.0))
             ))
         );
+        Ok(())
     }
 
     #[test]
-    fn test_factor() {
+    fn test_factor() -> Result<(), ParserError> {
         let tokens: Vec<Token> = vec![
             Token::from((TokenKind::Number, 1.0)),
             Token::from(TokenKind::Star),
@@ -209,17 +224,18 @@ mod tests {
         let mut parser = Parser::new(tokens);
         let expression = parser.parse();
         assert_eq!(
-            expression,
+            expression?,
             crate::Expr::BinaryExpr(Binary::new(
                 Expr::LiteralExpr(Literal::Number(1.0)),
                 Token::from(TokenKind::Star),
                 Expr::LiteralExpr(Literal::Number(2.0))
             ))
         );
+        Ok(())
     }
 
     #[test]
-    fn test_unary() {
+    fn test_unary() -> Result<(), ParserError> {
         let tokens: Vec<Token> = vec![
             Token::from(TokenKind::Minus),
             Token::from((TokenKind::Number, 1.0)),
@@ -227,21 +243,24 @@ mod tests {
         let mut parser = Parser::new(tokens);
         let expression = parser.parse();
         assert_eq!(
-            expression,
+            expression?,
             crate::Expr::UnaryExpr(Unary::new(
                 Token::from(TokenKind::Minus),
                 Expr::LiteralExpr(Literal::Number(1.0))
             ))
         );
+        Ok(())
     }
 
     #[test]
-    fn test_maths() {
-        // 1 + 2 * 3 - 4 / 2
+    fn test_maths() -> Result<(), ParserError> {
+        // (1 + 2) * 3 - 4 / 2
         let tokens: Vec<Token> = vec![
+            Token::from(TokenKind::LeftParen),
             Token::from((TokenKind::Number, 1.0)),
             Token::from(TokenKind::Plus),
             Token::from((TokenKind::Number, 2.0)),
+            Token::from(TokenKind::RightParen),
             Token::from(TokenKind::Star),
             Token::from((TokenKind::Number, 3.0)),
             Token::from(TokenKind::Minus),
@@ -252,16 +271,16 @@ mod tests {
         let mut parser = Parser::new(tokens);
         let expression = parser.parse();
         assert_eq!(
-            expression,
+            expression?,
             Expr::BinaryExpr(Binary::new(
                 Expr::BinaryExpr(Binary::new(
-                    Expr::LiteralExpr(Literal::Number(1.0)),
-                    Token::from(TokenKind::Plus),
-                    Expr::BinaryExpr(Binary::new(
-                        Expr::LiteralExpr(Literal::Number(2.0)),
-                        Token::from(TokenKind::Star),
-                        Expr::LiteralExpr(Literal::Number(3.0))
-                    ))
+                    Expr::GroupingExpr(Grouping::new(Expr::BinaryExpr(Binary::new(
+                        Expr::LiteralExpr(Literal::Number(1.0)),
+                        Token::from(TokenKind::Plus),
+                        Expr::LiteralExpr(Literal::Number(2.0))
+                    )))),
+                    Token::from(TokenKind::Star),
+                    Expr::LiteralExpr(Literal::Number(3.0))
                 )),
                 Token::from(TokenKind::Minus),
                 Expr::BinaryExpr(Binary::new(
@@ -271,5 +290,6 @@ mod tests {
                 ))
             ))
         );
+        Ok(())
     }
 }

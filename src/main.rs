@@ -64,7 +64,7 @@ fn main() -> Result<(), String> {
         let tokens: Vec<token::Token> = tokens.into_iter().filter_map(|token| token.ok()).collect();
         dbg!(&tokens);
         let mut parser = Parser::new(tokens);
-        let expression = parser.parse();
+        let expression = parser.parse()?;
         println!("{}", expression.ast());
 
     } else if let Commands::PrintAst = args.cmd {
