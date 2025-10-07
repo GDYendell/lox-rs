@@ -1,7 +1,7 @@
-use super::error::ParserError;
+use std::fmt::Display;
 
 use crate::{
-    expression::{BinaryExpr, Expr, GroupingExpr,  UnaryExpr},
+    expression::{BinaryExpr, Expr, GroupingExpr, UnaryExpr},
     token::{Token, TokenKind, TokenValue},
 };
 
@@ -27,9 +27,10 @@ impl Parser {
 
     fn match_next(&mut self, kinds: &[TokenKind]) -> Option<Token> {
         if let Some(token) = self.peek()
-            && kinds.contains(&token.kind) {
-                return self.next();
-            }
+            && kinds.contains(&token.kind)
+        {
+            return self.next();
+        }
         None
     }
 
@@ -109,12 +110,8 @@ impl Parser {
                 TokenKind::Number | TokenKind::String => {
                     if let Some(value) = value {
                         match value {
-                            TokenValue::String(value) => {
-                                Ok(Expr::StringLiteral(value))
-                            }
-                            TokenValue::Number(value) => {
-                                Ok(Expr::NumberLiteral(value))
-                            }
+                            TokenValue::String(value) => Ok(Expr::StringLiteral(value)),
+                            TokenValue::Number(value) => Ok(Expr::NumberLiteral(value)),
                         }
                     } else {
                         Err(ParserError::ExpectedPrimaryExpressionGot(Token {
@@ -170,17 +167,48 @@ impl Parser {
                 | TokenKind::Return => return,
                 _ => {
                     self.next();
-                },
+                }
             }
         }
+    }
+}
+
+#[derive(Debug)]
+pub enum ParserError {
+    ExpectedExpression,
+    ExpectedPrimaryExpressionGot(Token),
+    UnclosedParenthesis,
+}
+
+impl From<&ParserError> for String {
+    fn from(value: &ParserError) -> Self {
+        match value {
+            ParserError::ExpectedExpression => "Expected expression".to_string(),
+            ParserError::ExpectedPrimaryExpressionGot(token) => {
+                format!("Expected primary expression got {}", token)
+            }
+            ParserError::UnclosedParenthesis => "Unclosed parenthesis".to_string(),
+        }
+    }
+}
+
+impl From<ParserError> for String {
+    fn from(value: ParserError) -> Self {
+        String::from(&value)
+    }
+}
+
+impl Display for ParserError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", String::from(self))
     }
 }
 
 #[cfg(test)]
 mod tests {
     use crate::{
-        expression::{BinaryExpr, Expr, GroupingExpr,  UnaryExpr},
-        parser::{Parser, error::ParserError},
+        expression::{BinaryExpr, Expr, GroupingExpr, UnaryExpr},
+        parser::{Parser, ParserError},
         token::{Token, TokenKind},
     };
 
