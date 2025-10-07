@@ -9,7 +9,7 @@ use lexer::Lexer;
 mod parser;
 use parser::Parser;
 
-use crate::{ast_display::AstDisplay, expression::{Binary, Expr, Grouping, Literal, Unary}};
+use crate::{ast_display::AstDisplay, expression::{BinaryExpr, Expr, GroupingExpr,  UnaryExpr}};
 
 mod ast_display;
 mod expression;
@@ -68,27 +68,27 @@ fn main() -> Result<(), String> {
         println!("{}", expression.ast());
 
     } else if let Commands::PrintAst = args.cmd {
-        let expression = Expr::BinaryExpr(Binary::new(
-            Expr::LiteralExpr(Literal::String("one".to_string())),
+        let expression = Expr::Binary(BinaryExpr::new(
+            Expr::StringLiteral("one".to_string()),
             Token::from(TokenKind::Plus),
-            Expr::LiteralExpr(Literal::String("two".to_string())),
+            Expr::StringLiteral("two".to_string()),
         ));
         println!("{}", expression.ast());
 
-        let expression = Expr::UnaryExpr(Unary::new(
+        let expression = Expr::Unary(UnaryExpr::new(
             Token::from(TokenKind::Minus),
-            Expr::LiteralExpr(Literal::Number(1.0)),
+            Expr::NumberLiteral(1.0),
         ));
         println!("{}", expression.ast());
 
-        let expression = Expr::BinaryExpr(Binary::new(
-            Expr::UnaryExpr(Unary::new(
+        let expression = Expr::Binary(BinaryExpr::new(
+            Expr::Unary(UnaryExpr::new(
                 Token::from(TokenKind::Minus),
-                Expr::LiteralExpr(Literal::Number(123.0)),
+                Expr::NumberLiteral(123.0),
             )),
             Token::from(TokenKind::Star),
-            Expr::GroupingExpr(Grouping::new(
-                Expr::LiteralExpr(Literal::Number(45.67)),
+            Expr::Grouping(GroupingExpr::new(
+                Expr::NumberLiteral(45.67),
             )),
         ));
         println!("{}", expression.ast());

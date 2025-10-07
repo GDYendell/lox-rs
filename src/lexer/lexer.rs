@@ -35,15 +35,13 @@ impl Lexer {
 
     fn peek_two(&self, n: usize) -> Option<Vec<char>> {
         (self.position..self.position + n)
-            .into_iter()
             .map(|i| self.source.get(i).cloned())
             .collect()
     }
 
     fn next(&mut self) -> Option<char> {
-        self.peek().map(|char| {
+        self.peek().inspect(|_char| {
             self.position += 1;
-            char
         })
     }
 
@@ -81,7 +79,7 @@ impl Lexer {
 
                 '"' => tokens.push(self.scan_string()),
 
-                char if char.is_digit(10) => tokens.push(self.scan_number()),
+                char if char.is_ascii_digit() => tokens.push(self.scan_number()),
 
                 char if char.is_alphabetic() || char == '_' => tokens.push(self.scan_word()),
 
@@ -89,7 +87,7 @@ impl Lexer {
             }
         }
 
-        tokens.push(Ok(Token::from(TokenKind::EOF)));
+        tokens.push(Ok(Token::from(TokenKind::EoF)));
 
         tokens
     }
@@ -132,20 +130,21 @@ impl Lexer {
     fn scan_number(&mut self) -> Result<Token, LexerError> {
         let start = self.position - 1;
         while let Some(char) = self.peek()
-            && char.is_digit(10)
+            && char.is_ascii_digit()
         {
             self.next();
         }
 
-        if let Some([dot, digit]) = self.peek_two(2).as_deref() {
-            if dot == &'.' && digit.is_digit(10) {
+        if let Some([dot, digit]) = self.peek_two(2).as_deref()
+            && dot == &'.'
+            && digit.is_ascii_digit()
+        {
+            self.next();
+            self.next();
+            while let Some(char) = self.peek()
+                && char.is_ascii_digit()
+            {
                 self.next();
-                self.next();
-                while let Some(char) = self.peek()
-                    && char.is_digit(10)
-                {
-                    self.next();
-                }
             }
         }
 
@@ -199,7 +198,7 @@ mod tests {
             lexer.scan_tokens(),
             vec![
                 Ok(Token::from((TokenKind::Number, 123.0))),
-                Ok(Token::from(TokenKind::EOF))
+                Ok(Token::from(TokenKind::EoF))
             ]
         );
     }
@@ -211,7 +210,7 @@ mod tests {
             lexer.scan_tokens(),
             vec![
                 Ok(Token::from((TokenKind::Number, 123.456))),
-                Ok(Token::from(TokenKind::EOF))
+                Ok(Token::from(TokenKind::EoF))
             ]
         );
     }
@@ -225,11 +224,10 @@ mod tests {
                 Ok(Token::from((TokenKind::Number, 123.0))),
                 Ok(Token::from(TokenKind::Dot)),
                 Ok(Token::from((TokenKind::Identifier, "abc".to_string()))),
-                Ok(Token::from(TokenKind::EOF))
+                Ok(Token::from(TokenKind::EoF))
             ]
         );
     }
-
 
     #[test]
     fn test_string() {
@@ -241,7 +239,7 @@ mod tests {
                     TokenKind::String,
                     "this is a string".to_string()
                 ))),
-                Ok(Token::from(TokenKind::EOF))
+                Ok(Token::from(TokenKind::EoF))
             ]
         );
     }
@@ -260,7 +258,7 @@ mod tests {
                 Ok(Token::from(TokenKind::Or)),
                 Ok(Token::from(TokenKind::False)),
                 Ok(Token::from(TokenKind::RightParen)),
-                Ok(Token::from(TokenKind::EOF))
+                Ok(Token::from(TokenKind::EoF))
             ]
         );
     }

@@ -9,8 +9,8 @@ pub enum ParserError {
     UnclosedParenthesis,
 }
 
-impl From<ParserError> for String {
-    fn from(value: ParserError) -> Self {
+impl From<&ParserError> for String {
+    fn from(value: &ParserError) -> Self {
         match value {
             ParserError::ExpectedExpression => "Expected expression".to_string(),
             ParserError::ExpectedPrimaryExpressionGot(token) => {
@@ -21,8 +21,14 @@ impl From<ParserError> for String {
     }
 }
 
+impl From<ParserError> for String {
+    fn from(value: ParserError) -> Self {
+        String::from(&value)
+    }
+}
+
 impl Display for ParserError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self)
+        write!(f, "{}", String::from(self))
     }
 }

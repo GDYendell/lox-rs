@@ -1,6 +1,6 @@
 use std::ops::Deref;
 
-use crate::expression::{Expr, Literal};
+use crate::expression::{Expr };
 
 pub trait AstDisplay {
     fn ast(&self) -> String;
@@ -9,12 +9,12 @@ pub trait AstDisplay {
 impl AstDisplay for Expr {
     fn ast(&self) -> String {
         match self {
-            Expr::LiteralExpr(Literal::Boolean(value)) => value.to_string(),
-            Expr::LiteralExpr(Literal::Number(value)) => value.to_string(),
-            Expr::LiteralExpr(Literal::String(value)) => format!("\"{}\"", value),
-            Expr::LiteralExpr(Literal::Nil) => "nil".to_string(),
-            Expr::UnaryExpr(unary) => format!("({} {})", unary.operator, unary.right.deref().ast()),
-            Expr::BinaryExpr(binary) => {
+            Expr::BooleanLiteral(value) => value.to_string(),
+            Expr::NumberLiteral(value) => value.to_string(),
+            Expr::StringLiteral(value) => format!("\"{}\"", value),
+            Expr::NilLiteral => "nil".to_string(),
+            Expr::Unary(unary) => format!("({} {})", unary.operator, unary.right.deref().ast()),
+            Expr::Binary(binary) => {
                 format!(
                     "({} {} {})",
                     binary.left.ast(),
@@ -22,7 +22,7 @@ impl AstDisplay for Expr {
                     binary.right.ast()
                 )
             }
-            Expr::GroupingExpr(grouping) => format!("(group {})", grouping.expression.ast()),
+            Expr::Grouping(grouping) => format!("(group {})", grouping.expression.ast()),
         }
     }
 }

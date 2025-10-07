@@ -2,29 +2,24 @@ use crate::token::Token;
 
 #[derive(Debug, PartialEq)]
 pub enum Expr {
-    LiteralExpr(Literal),
-    UnaryExpr(Unary),
-    BinaryExpr(Binary),
-    GroupingExpr(Grouping),
+    BooleanLiteral(bool),
+    NumberLiteral(f64),
+    StringLiteral(String),
+    NilLiteral,
+    Unary(UnaryExpr),
+    Binary(BinaryExpr),
+    Grouping(GroupingExpr),
 }
 
 #[derive(Debug, PartialEq)]
-pub enum Literal {
-    Boolean(bool),
-    Number(f64),
-    String(String),
-    Nil,
-}
-
-#[derive(Debug, PartialEq)]
-pub struct Unary {
+pub struct UnaryExpr {
     pub operator: Token,
     pub right: Box<Expr>,
 }
 
-impl Unary {
-    pub fn new(operator: Token, right: Expr) -> Unary {
-        Unary {
+impl UnaryExpr {
+    pub fn new(operator: Token, right: Expr) -> UnaryExpr {
+        UnaryExpr {
             operator,
             right: Box::new(right),
         }
@@ -32,15 +27,15 @@ impl Unary {
 }
 
 #[derive(Debug, PartialEq)]
-pub struct Binary {
+pub struct BinaryExpr {
     pub left: Box<Expr>,
     pub operator: Token,
     pub right: Box<Expr>,
 }
 
-impl Binary {
-    pub fn new(left: Expr, operator: Token, right: Expr) -> Binary {
-        Binary {
+impl BinaryExpr {
+    pub fn new(left: Expr, operator: Token, right: Expr) -> BinaryExpr {
+        BinaryExpr {
             left: Box::new(left),
             operator,
             right: Box::new(right),
@@ -49,13 +44,13 @@ impl Binary {
 }
 
 #[derive(Debug, PartialEq)]
-pub struct Grouping {
+pub struct GroupingExpr {
     pub expression: Box<Expr>,
 }
 
-impl Grouping {
-    pub fn new(expression: Expr) -> Grouping {
-        Grouping {
+impl GroupingExpr {
+    pub fn new(expression: Expr) -> GroupingExpr {
+        GroupingExpr {
             expression: Box::new(expression),
         }
     }

@@ -44,7 +44,7 @@ pub enum TokenKind {
     Var,
     While,
 
-    EOF,
+    EoF,
 }
 
 impl Display for TokenKind {
@@ -92,7 +92,7 @@ impl Display for TokenKind {
             TokenKind::Var => "var",
             TokenKind::While => "while",
 
-            TokenKind::EOF => "EOF",
+            TokenKind::EoF => "EOF",
         };
 
         write!(f, "{}", value)
